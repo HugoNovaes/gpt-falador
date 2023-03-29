@@ -1,0 +1,10 @@
+{
+    "URL_API": "https://api.openai.com/v1/chat/completions",
+    "API_KEY": "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",
+    "GPT_MODEL": "gpt-3.5-turbo",
+    "TIMEOUT": 200,
+    "TEMPERATURE": 0.3,
+    "TTS": true,
+    "IDIOMA": "pt-br",
+    "MAX_DELAY": 165
+}
