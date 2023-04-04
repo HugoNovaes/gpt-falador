@@ -86,7 +86,7 @@ type (
 		}
 	}
 
-	// Estrutura as configurações lidas do arquivo settings.json
+	// Estrutura das configurações lidas do arquivo settings.json
 	Settings struct {
 		URL_API     string  // URL --> "https://api.openai.com/v1/chat/completions"
 		API_KEY     string  // Criar API-KEY pelo site https://platform.openai.com/account/api-keys
@@ -99,9 +99,10 @@ type (
 		// Delay máximo para imprimir as palavras na tela. Dependendo do idioma,
 		// a pronúncia pode ser mais rápida ou mais lenta. Quando narra números, demora
 		// mais para narrá-los do que para imprimir na tela.
-		// A narração do idioma em português é mais lenta que em português, por isso,
+		// A narração do idioma em português é mais lenta que em inglês, por isso,
 		// deve-se ajustar o valor desse parâmetro para tentar sincronizar a impressão
-		// da resposta com a narração dela.
+		// da resposta com a narração dela. Exemplo: para en-us, valor entre 120 e 150 está ok.
+		// Para pt-br, o valor entre 165 e 200 está ok.
 		MAX_DELAY int
 	}
 )
@@ -405,14 +406,15 @@ func clearScreen() {
 }
 
 // Esta função tem que ser acionada pelo comando "go".
-// Aaso contrário, coloca o processo principal em loop infinito.
+// Caso contrário, coloca o processo principal em loop infinito.
+// Imprime na tela um indicador de atividade mostrando que está aguardando resposta da API do ChatGPT.
 func pensando() {
 	setTerminouDePensar(false)
 	timeout := settings.TIMEOUT
 	for contador := 0; ; contador++ {
 
 		fmt.Print("\033[93m")
-		// A cada múltiplo de 4, limpa a linha e imprime novamente a frase "ChatGPT está pensando"
+		// A cada múltiplo de 4, limpa a linha e imprime o contador de timeout.
 		if contador%4 == 0 {
 			fmt.Printf("\r         \r%d", timeout)
 			timeout--
@@ -731,7 +733,7 @@ func obtemResposta(req *http.Request, c chan *ChatGPTResult, cf context.CancelFu
 		if strings.Contains(err.Error(), "context canceled") {
 			fmt.Printf("\r\033[31mServidor demorou a responder. Envie a pergunta novamente.\033[m")
 
-			// Remove a mensagem do histórico para não repetir a mesma, caso o usuário a reenvie.
+			// Remove a mensagem do histórico para não repetir a mesma nos próximos envios.
 			messages = messages[:len(messages)-1]
 
 		} else {
@@ -762,7 +764,7 @@ func obtemResposta(req *http.Request, c chan *ChatGPTResult, cf context.CancelFu
 		return
 	}
 
-	// Se o parâmetro "--printjason" for informado, imprime o retorno na tela.
+	// Se o parâmetro "--printjason" for informado, imprime o json retornado na tela.
 	if printJson {
 		fmt.Print("\r\nJSON retornado: ")
 		fmt.Println(string(retBody))
@@ -800,8 +802,7 @@ func obtemResposta(req *http.Request, c chan *ChatGPTResult, cf context.CancelFu
 }
 
 // A função init() é executada antes da função main().
-// Neste momento, carrega o conteúdo do arquivo settings.json e já dá a dica para
-// a IA que o idioma das respostas deve ser o informado no campo IDIOMA.
+// Neste momento, carrega o conteúdo do arquivo settings.json.
 func init() {
 	if err := setConsoleColors(); err != nil {
 		fmt.Println("Terminal não permite habilitar cores")
